@@ -59,7 +59,7 @@ def contribute():
         }), 400
 
 
-    time.sleep(2)  
+    time.sleep(0)  
 
     company_match = amount * 0.5
     total_contribution = amount + company_match
