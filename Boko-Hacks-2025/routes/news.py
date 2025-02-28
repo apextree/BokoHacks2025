@@ -11,10 +11,10 @@ NEWS_API_BASE_URL = "https://saurav.tech/NewsAPI"
 CATEGORY_MAPPING = {
     'business': 'business',
     'technology': 'technology',
-    'world': 'general'
+    'world': 'general',  # mapping 'world' to 'general' as that's typically how news APIs handle it
 }
 
-DEFAULT_COUNTRY = 'us'
+DEFAULT_COUNTRY = 'us'  # or whatever default country code you want to use
 
 INTERNAL_NEWS = [
     {
@@ -45,65 +45,78 @@ def news_page():
     """Render the news page"""
     return render_template('news.html')
 
-@news_bp.route('/fetch', methods=['GET'])
-def fetch_news():
-    """Fetch news from the News API with a vulnerability"""
+def get_news_items(category='general'):
+    """Fetch news items from the API"""
     try:
-        # Get category from request, default to business
-        category = request.args.get('category', 'business')
+        # Map the category to API category
+        api_category = CATEGORY_MAPPING.get(category, 'general')
         
-        # Map our category to API category
-        api_category = CATEGORY_MAPPING.get(category, 'business')
-        api_url = f"{NEWS_API_BASE_URL}/top-headlines/category/{api_category}/{DEFAULT_COUNTRY}.json"
+        # Construct the API URL
+        url = f"{NEWS_API_BASE_URL}/top-headlines/category/{api_category}/{DEFAULT_COUNTRY}.json"
         
-        print(f"Fetching news from: {api_url}")
+        # Make the request
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()  # Raise an exception for bad status codes
         
-        # Fetch news from external API
-        response = requests.get(api_url, timeout=10)
+        # Parse the response
+        data = response.json()
         
-        if response.status_code == 200:
-            data = response.json()
-            articles = data.get('articles', [])[:10]  # Limit to 10 articles
+        # Transform the data into our format
+        news_items = []
+        for article in data.get('articles', []):
+            news_items.append({
+                'title': article.get('title', ''),
+                'content': article.get('description', ''),
+                'imageUrl': article.get('urlToImage', ''),
+                'readMoreUrl': article.get('url', ''),
+                'date': article.get('publishedAt', '')
+            })
+        
+        # Add internal news if appropriate
+        if category == 'internal':
+            news_items.extend(INTERNAL_NEWS)
             
-            filter_param = request.args.get('filter', '{}')
-            
-            try:
-                filter_options = json.loads(filter_param)
-                print(f"Filter options: {filter_options}")
-                
-                if filter_options.get('showInternal') == True:
-                    # Add internal news to the results
-                    print("Adding internal news to results!")
-                    articles = INTERNAL_NEWS + articles
-            except json.JSONDecodeError:
-                print(f"Invalid filter parameter: {filter_param}")
-            
-            # Transform the data to match our expected format
-            transformed_data = {
-                'success': True,
-                'category': category,
-                'data': []
-            }
-            
-            # Process articles
-            for article in articles:
-                transformed_data['data'].append({
-                    'title': article.get('title', 'No Title'),
-                    'content': article.get('description', 'No content available'),
-                    'date': article.get('publishedAt', ''),
-                    'readMoreUrl': article.get('url', '#'),
-                    'imageUrl': article.get('urlToImage', '')
-                })
-            
-            return jsonify(transformed_data)
-        else:
-            return jsonify({
-                'success': False,
-                'error': f'Failed to fetch news. Status code: {response.status_code}'
-            }), response.status_code
+        return news_items
+        
+    except requests.RequestException as e:
+        print(f"API Request Error: {str(e)}")  # Log the error
+        return []
     except Exception as e:
-        print(f"Error fetching news: {e}")
+        print(f"Unexpected Error: {str(e)}")  # Log the error
+        return []
+
+@news_bp.route('/fetch')
+def fetch_news():
+    try:
+        category = request.args.get('category', 'business')
+        search_term = request.args.get('search', '').lower()
+        
+        # Get news items for the specified category
+        news_items = get_news_items(category)
+        
+        # Filter by search term if provided
+        if search_term:
+            filtered_items = []
+            for item in news_items:
+                title = (item.get('title', '') or '').lower()
+                content = (item.get('content', '') or '').lower()
+                if search_term in title or search_term in content:
+                    filtered_items.append(item)
+            news_items = filtered_items
+        
+        return jsonify({
+            'success': True,
+            'data': news_items,
+            'source': {
+                'category': category,
+                'search': search_term
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error in fetch_news: {str(e)}")  # Log the error
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': str(e),
+            'data': []
         }), 500
