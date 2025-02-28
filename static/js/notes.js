@@ -189,29 +189,12 @@ function deleteNote(noteId) {
             if (data.success) {
                 console.log('Note deleted successfully');
                 
-                const deleteBtn = document.querySelector(`.delete-btn[data-note-id="${noteId}"]`);
-                if (deleteBtn) {
-                    const noteElement = deleteBtn.closest('.note-card');
-                    if (noteElement) {
-                        noteElement.remove();
-                    } else {
-                        console.error('Note element not found');
-                    }
+                // Find the note element using the correct class name
+                const noteElement = document.querySelector(`.note-card:has(.delete-note[data-note-id="${noteId}"])`);
+                if (noteElement) {
+                    noteElement.remove();
                 } else {
-                    const notes = document.querySelectorAll('.note-card');
-                    let found = false;
-                    for (let i = 0; i < notes.length; i++) {
-                        const button = notes[i].querySelector(`.delete-btn[onclick*="${noteId}"]`);
-                        if (button) {
-                            notes[i].remove();
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        console.error('Could not find note element to remove');
-                        window.location.reload();
-                    }
+                    console.error('Note element not found');
                 }
             } else {
                 console.error('Delete failed:', data.error || 'Unknown error');

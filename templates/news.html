@@ -14,19 +14,19 @@
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        
+
         .news-header {
             margin-bottom: 20px;
             text-align: center;
         }
-        
+
         .news-filters {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
         }
-        
+
         .filter-btn {
             background-color: #f5f5f5;
             border: 1px solid #ddd;
@@ -35,72 +35,72 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        
+
         .filter-btn.active {
             background-color: #501214;
             color: white;
             border-color: #501214;
         }
-        
+
         .news-list {
             margin-top: 20px;
         }
-        
+
         .news-item {
             padding: 15px;
             border-bottom: 1px solid #eee;
         }
-        
+
         .news-item:last-child {
             border-bottom: none;
         }
-        
+
         .news-title {
             font-weight: bold;
             margin-bottom: 10px;
             color: #333;
         }
-        
+
         .news-image {
             margin-bottom: 10px;
             text-align: center;
         }
-        
+
         .news-image img {
             max-width: 100%;
             max-height: 250px;
             border-radius: 4px;
             object-fit: cover;
         }
-        
+
         .news-content {
             color: #555;
             margin-bottom: 10px;
             line-height: 1.5;
         }
-        
+
         .news-meta {
             display: flex;
             justify-content: space-between;
             font-size: 0.8rem;
             color: #777;
         }
-        
+
         .read-more {
             color: #501214;
             text-decoration: none;
         }
-        
+
         .read-more:hover {
             text-decoration: underline;
         }
-        
+
         .loading {
             text-align: center;
             padding: 20px;
             color: #777;
         }
-        
+
         .error-message {
             text-align: center;
             padding: 20px;
@@ -108,7 +108,7 @@
             background-color: #ffebee;
             border-radius: 4px;
         }
-        
+
         .news-footer {
             text-align: center;
             margin-top: 20px;
@@ -117,21 +117,21 @@
             color: #777;
             font-size: 0.8rem;
         }
-        
+
         .search-tools {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 15px;
         }
-        
+
         .search-tools input {
             flex-grow: 1;
             padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
+
         .search-tools button {
             background-color: #501214;
             color: white;
@@ -140,7 +140,7 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        
+
         /* Settings button styles */
         .settings-btn {
             background-color: #f5f5f5;
@@ -164,34 +164,49 @@
         <div class="news-header">
             <p>Stay updated with the latest industry news</p>
         </div>
-        
+
         <div class="search-tools">
             <input type="text" id="search-news" placeholder="Search news...">
             <button id="search-button">Search</button>
-            <button id="settings-button" class="settings-btn" title="Settings">
+            <button id="settings-button" class="settings-btn">
                 Settings ⚙️
             </button>
         </div>
-        
+
         <div class="news-filters">
             <button class="filter-btn active" data-category="business">Business</button>
             <button class="filter-btn" data-category="technology">Technology</button>
             <button class="filter-btn" data-category="world">World</button>
         </div>
-        
+
         <div class="news-list">
             <div class="loading">Loading news feed...</div>
         </div>
-        
+
         <div class="news-footer">
             News provided by Public API • Updated <span id="update-time"></span>
         </div>
     </div>
 
     <script>
+        // Add this at the very top of your script section
+        document.addEventListener('DOMContentLoaded', function() {
+            const settingsButton = document.getElementById('settings-button');
+            console.log('Settings button element:', settingsButton); // Log the actual element
+
+            if (settingsButton) {
+                settingsButton.onclick = function() {
+                    console.log('SETTINGS BUTTON CLICKED!');
+                    alert('Settings button clicked!');
+                };
+            } else {
+                console.error('Settings button not found in DOM');
+            }
+        });
+
         // This creates a dialog that will be shown when the settings button is clicked
         const settingsDialogHTML = `
-            <div id="settings-dialog" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            <div id="settings-dialog" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
                                            background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.3);
                                            z-index: 1000; display: none; width: 300px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -229,20 +244,36 @@
                 </div>
             </div>
         `;
-        
+
         // Append the settings dialog to the body
         document.body.insertAdjacentHTML('beforeend', settingsDialogHTML);
-        
-        // Update the time when the page was loaded
-        document.getElementById('update-time').textContent = new Date().toLocaleTimeString();
-        
+
         // Initialize settings
         let currentSettings = {
             articlesCount: 10,
             defaultCategory: 'business',
             filters: {}
         };
-        
+
+        // Wait for DOM content to be loaded before setting up event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            const settingsButton = document.getElementById('settings-button');
+            console.log('Settings button found:', !!settingsButton);
+
+            if (settingsButton) {
+                settingsButton.style.border = '2px solid red'; // Visual confirmation
+                settingsButton.addEventListener('click', function(e) {
+                    console.log('Button clicked!');
+                    alert('Settings button clicked!'); // Temporary test
+                });
+            }
+            // ... rest of your code
+        });
+
+        // Update the time when the page was loaded
+        document.getElementById('update-time').textContent = new Date().toLocaleTimeString();
+
         // Set up filter buttons
         document.querySelectorAll('.filter-btn').forEach(button => {
             button.addEventListener('click', function() {
@@ -250,26 +281,26 @@
                     btn.classList.remove('active');
                 });
                 this.classList.add('active');
-                
+
                 fetchNews(this.getAttribute('data-category'));
             });
         });
-        
+
         // Settings button
         document.getElementById('settings-button').addEventListener('click', function() {
             document.getElementById('settings-dialog').style.display = 'block';
         });
-        
+
         // Close settings
         document.getElementById('close-settings').addEventListener('click', function() {
             document.getElementById('settings-dialog').style.display = 'none';
         });
-        
+
         // Save settings
         document.getElementById('save-settings').addEventListener('click', function() {
             currentSettings.articlesCount = parseInt(document.getElementById('articles-count').value);
             currentSettings.defaultCategory = document.getElementById('default-category').value;
-            
+
             // Check if dev options are visible
             const devOptions = document.getElementById('dev-options');
             if (window.getComputedStyle(devOptions).display !== 'none') {
@@ -284,14 +315,14 @@
                     return;
                 }
             }
-            
+
             document.getElementById('settings-dialog').style.display = 'none';
-            
+
             // Trigger a news refresh with updated settings
             const activeCategory = document.querySelector('.filter-btn.active').getAttribute('data-category');
             fetchNews(activeCategory);
         });
-        
+
         // Apply API filters directly
         if (document.getElementById('apply-filters')) {
             document.getElementById('apply-filters').addEventListener('click', function() {
@@ -299,7 +330,7 @@
                     const filterJSON = document.getElementById('filter-json').value;
                     if (filterJSON.trim()) {
                         currentSettings.filters = JSON.parse(filterJSON);
-                        
+
                         // Refresh news with new filters
                         const activeCategory = document.querySelector('.filter-btn.active').getAttribute('data-category');
                         fetchNews(activeCategory);
@@ -310,19 +341,19 @@
                 }
             });
         }
-        
+
         // Fetch news function
         function fetchNews(category) {
             const newsContainer = document.querySelector('.news-list');
             newsContainer.innerHTML = '<div class="loading">Loading news feed...</div>';
-            
+
             let url = `/apps/news/fetch?category=${category}`;
-            
+
             // Add filter parameter if it exists
             if (currentSettings.filters && Object.keys(currentSettings.filters).length > 0) {
                 url += `&filter=${encodeURIComponent(JSON.stringify(currentSettings.filters))}`;
             }
-            
+
             fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -332,7 +363,7 @@
                 })
                 .then(data => {
                     renderNews(data);
-                    
+
                     // Update timestamp
                     document.getElementById('update-time').textContent = new Date().toLocaleTimeString();
                 })
@@ -346,24 +377,24 @@
                     `;
                 });
         }
-        
+
         function renderNews(data) {
             const newsContainer = document.querySelector('.news-list');
-            
+
             if (!data || !data.success || !data.data || data.data.length === 0) {
                 newsContainer.innerHTML = `<div class="error-message">No news articles found.</div>`;
                 return;
             }
-            
+
             const newsItems = data.data.slice(0, currentSettings.articlesCount);
-            
+
             let html = '';
-            
+
             // Add each news item
             newsItems.forEach(item => {
                 const date = new Date(item.date || new Date()).toLocaleDateString();
                 const hasImage = item.imageUrl && item.imageUrl !== 'null';
-                
+
                 html += `
                     <div class="news-item">
                         <div class="news-title">${item.title}</div>
@@ -376,14 +407,14 @@
                     </div>
                 `;
             });
-            
+
             newsContainer.innerHTML = html;
         }
-        
+
         // Debug console
         console.log("%c🔍 News App Loaded", "color: #501214; font-size: 14px; font-weight: bold;");
         console.log("%cTip for developers: Press 'F12' for developer tools and type 'showDevTools()' to display advanced options", "color: #333; font-style: italic;");
-        
+
         window.showDevTools = function() {
             console.log("%c🛠️ Enabling developer options...", "color: green; font-weight: bold;");
             const devOptions = document.getElementById('dev-options');
@@ -394,7 +425,7 @@
                 console.log('%c{"showInternal": true}', "color: blue; font-family: monospace; background: #f5f5f5; padding: 3px; border-radius: 3px;");
             }
         };
-        
+
         // Search button functionality (non-functional for this demo)
         document.getElementById('search-button').addEventListener('click', function() {
             const searchTerm = document.getElementById('search-news').value.trim();
@@ -404,16 +435,16 @@
                 alert("Please enter a search term.");
             }
         });
-        
+
         // Load initial news
         fetchNews('business');
-        
+
         // Expose functions for the modal to call
         window.initializeApp = function() {
             console.log('News app initialized via modal');
             fetchNews('business');
         };
-        
+
         window.cleanupApp = function() {
             console.log('News app cleanup');
         };

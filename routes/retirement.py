@@ -23,43 +23,43 @@ def retirement_dashboard():
 def get_balance():
     if "user" not in session:
         return jsonify({"error": "Not logged in"}), 401
-        
+
     username = session["user"]
     if username not in user_accounts:
         user_accounts[username] = {"funds": 10000, "401k_balance": 0}
-        
+
     return jsonify(user_accounts[username])
 
 @retirement_bp.route("/contribute", methods=["POST"])
 def contribute():
     if "user" not in session:
         return jsonify({"error": "Not logged in"}), 401
-        
+
     data = request.get_json()
     amount = data.get("amount", 0)
-    
+
     username = session["user"]
     if username not in user_accounts:
         user_accounts[username] = {"funds": 10000, "401k_balance": 0}
-    
+
     user_data = user_accounts[username]
 
     if amount <= 0:
         return jsonify({
-            "message": "Invalid contribution amount!", 
+            "message": "Invalid contribution amount!",
             "funds": user_data["funds"],
             "401k_balance": user_data["401k_balance"]
         }), 400
-    
+
     if amount > user_data["funds"]:
         return jsonify({
-            "message": "Insufficient personal funds for this contribution!", 
+            "message": "Insufficient personal funds for this contribution!",
             "funds": user_data["funds"],
             "401k_balance": user_data["401k_balance"]
         }), 400
 
 
-    time.sleep(2)  
+    #time.sleep(2)
 
     company_match = amount * 0.5
     total_contribution = amount + company_match
@@ -77,17 +77,17 @@ def contribute():
 def reset_account():
     if "user" not in session:
         return jsonify({"error": "Not logged in"}), 401
-        
+
     username = session["user"]
     if username not in user_accounts:
         return jsonify({
-            "message": "Account not found!", 
+            "message": "Account not found!",
             "funds": 0,
             "401k_balance": 0
         }), 404
-    
+
     user_accounts[username] = {"funds": 10000, "401k_balance": 0}
-    
+
     return jsonify({
         "message": "Account reset successfully!",
         "funds": user_accounts[username]["funds"],
