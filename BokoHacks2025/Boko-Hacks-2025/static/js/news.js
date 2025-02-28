@@ -1,18 +1,57 @@
+let refreshInterval = null;
+
 function initializeApp() {
     console.log("News app initialized");
     initializeSearch();
     setupEventListeners();
-    fetchNews('business'); // Default category
+    
+    // Load settings and apply them
+    const settings = loadSettings();
+    applySettings(settings);
+    
+    // Set active category based on saved default
+    setActiveCategory(settings.defaultCategory);
+    
+    // Fetch news for the default category
+    fetchNews(settings.defaultCategory);
 }
 
 function setupEventListeners() {
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(button => {
         button.addEventListener('click', function() {
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            fetchNews(this.getAttribute('data-category'));
+            const category = this.getAttribute('data-category');
+            setActiveCategory(category);
+            fetchNews(category);
+            
+            // Save this as the new default category
+            const settings = loadSettings();
+            settings.defaultCategory = category;
+            saveSettings(settings);
         });
+    });
+
+    // Add settings button event listener
+    const settingsBtn = document.getElementById('settings-button');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', openSettings);
+    }
+
+    // Add overlay click listener
+    const overlay = document.getElementById('settings-overlay');
+    if (overlay) {
+        overlay.addEventListener('click', closeSettings);
+    }
+}
+
+function setActiveCategory(category) {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        if (btn.getAttribute('data-category') === category) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
     });
 }
 
@@ -95,7 +134,12 @@ function fetchNews(category, customUrl = null) {
     const newsList = newsContainer.querySelector('.news-list');
     
     // Show loading state
-    newsList.innerHTML = '<div class="loading">Loading news feed...</div>';
+    if (newsList) {
+        newsList.innerHTML = '<div class="loading">Loading news...</div>';
+    }
+
+    // Update the last refresh time
+    updateRefreshTime();
     
     // Build the API URL
     let apiUrl = `/apps/news/fetch?category=${category}`;
@@ -172,3 +216,101 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeApp();
     }
 });
+
+function openSettings() {
+    const modal = document.getElementById('settings-modal');
+    const overlay = document.getElementById('settings-overlay');
+    if (modal && overlay) {
+        // Load current settings into form
+        const settings = loadSettings();
+        
+        const refreshSelect = document.getElementById('refresh-interval');
+        const categorySelect = document.getElementById('default-category');
+        
+        if (refreshSelect) refreshSelect.value = settings.refreshInterval;
+        if (categorySelect) categorySelect.value = settings.defaultCategory;
+
+        modal.style.display = 'block';
+        overlay.style.display = 'block';
+    }
+}
+
+function closeSettings() {
+    const modal = document.getElementById('settings-modal');
+    const overlay = document.getElementById('settings-overlay');
+    if (modal && overlay) {
+        modal.style.display = 'none';
+        overlay.style.display = 'none';
+    }
+}
+
+function saveSettings() {
+    const refreshIntervalSelect = document.getElementById('refresh-interval');
+    const defaultCategorySelect = document.getElementById('default-category');
+
+    const settings = {
+        refreshInterval: refreshIntervalSelect ? refreshIntervalSelect.value : '0',
+        defaultCategory: defaultCategorySelect ? defaultCategorySelect.value : 'business'
+    };
+
+    localStorage.setItem('newsSettings', JSON.stringify(settings));
+    
+    // Apply the new settings
+    applySettings(settings);
+    
+    // Close modal
+    closeSettings();
+    
+    // Refresh news with new settings
+    fetchNews(settings.defaultCategory);
+}
+
+function loadSettings() {
+    const defaultSettings = {
+        refreshInterval: '0',
+        defaultCategory: 'business'
+    };
+
+    try {
+        const savedSettings = localStorage.getItem('newsSettings');
+        return savedSettings ? JSON.parse(savedSettings) : defaultSettings;
+    } catch (error) {
+        console.error('Error loading settings:', error);
+        return defaultSettings;
+    }
+}
+
+function applySettings(settings) {
+    // Clear existing interval if any
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+
+    // Set up new refresh interval if needed
+    const interval = parseInt(settings.refreshInterval);
+    if (interval > 0) {
+        refreshInterval = setInterval(() => {
+            const activeCategory = document.querySelector('.filter-btn.active').getAttribute('data-category');
+            console.log(`Auto-refreshing news for category: ${activeCategory}`);
+            fetchNews(activeCategory);
+        }, interval);
+        
+        console.log(`Auto-refresh set to ${interval/1000} seconds`);
+    }
+
+    // Set the active category
+    setActiveCategory(settings.defaultCategory);
+}
+
+function updateRefreshTime() {
+    const timeElement = document.getElementById('update-time');
+    if (timeElement) {
+        const now = new Date();
+        timeElement.textContent = now.toLocaleTimeString();
+    }
+}
+
+window.openSettings = openSettings;
+window.closeSettings = closeSettings;
+window.saveSettings = saveSettings;
