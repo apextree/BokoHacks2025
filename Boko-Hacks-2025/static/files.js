@@ -75,60 +75,74 @@ function fetchCurrentFiles() {
 
 function attachFormHandler() {
     const form = document.getElementById('file-upload-form');
-    if (!form) {
-        console.error('File upload form not found!');
+    const fileInput = document.getElementById('file');
+    const allowedTypes = new Set(['.pdf', '.png', '.jpg', '.jpeg', '.gif']);
+    
+    if (!form || !fileInput) {
+        console.error('Form elements not found!');
         return;
     }
     
     if (form.dataset.handlerAttached) {
-        console.log('Form handler already attached');
         return;
     }
     
-    console.log('Found file upload form, attaching handler');
+    // Prevent drag and drop on the entire document
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
+    // File input change handler
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const extension = '.' + file.name.split('.').pop().toLowerCase();
+            if (!allowedTypes.has(extension)) {
+                showMessage("error", "This file type is not allowed. Please select a PDF or image file.");
+                e.target.value = ''; // Clear the input
+            }
+        }
+    });
+    
     form.dataset.handlerAttached = 'true';
     
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        console.log('Form submitted');
         
-        const fileInput = document.getElementById('file');
-        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        const file = fileInput.files[0];
+        if (!file) {
             showMessage("error", "Please select a file to upload");
             return;
         }
         
-        const file = fileInput.files[0];
-        console.log('Selected file:', file.name);
-        
-
-        const fileName = file.name;
-        const fileExt = fileName.split('.').pop().toLowerCase();
+        const extension = '.' + file.name.split('.').pop().toLowerCase();
+        if (!allowedTypes.has(extension)) {
+            showMessage("error", "This file type is not allowed");
+            return;
+        }
         
         const submitButton = form.querySelector('button[type="submit"]');
         if (submitButton) submitButton.disabled = true;
         
         const formData = new FormData(form);
         
-        console.log('Sending request to /apps/files/upload');
         fetch('/apps/files/upload', {
             method: 'POST',
             body: formData
         })
-        .then(response => {
-            console.log('Response received:', response);
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log("Upload response:", data);
-            
             if (submitButton) submitButton.disabled = false;
             
             if (data.success) {
                 showMessage("success", "File uploaded successfully!");
-                
                 form.reset();
-                
                 fetchCurrentFiles();
             } else {
                 showMessage("error", "Error uploading file: " + (data.error || "Unknown error"));
