@@ -1,3 +1,4 @@
+
 :root {
     --maroon: #501214;
     --maroon-light: #701a1a;
@@ -118,6 +119,7 @@
     color: var(--white);
     text-align: center;
     padding: 1rem;
+    margin-top: auto;
   }
   
   footer p {

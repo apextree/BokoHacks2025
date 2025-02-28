@@ -10,13 +10,14 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
         captcha_response = request.form.get("captcha")
-        stored_captcha = session.get("captcha_text")
-
-        if not stored_captcha or captcha_response.upper() != stored_captcha:
+        
+        stored_result = session.get("captcha_result")
+        
+        if not stored_result or captcha_response != stored_result:
             flash("Invalid CAPTCHA. Please try again.", "error")
             return redirect(url_for("register.register"))
 
-        session.pop("captcha_text", None)
+        session.pop("captcha_result", None)  # Clear the captcha after use
 
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
